@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Tests de langue · El Yasmine Online</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --blue: #013eab;
+      --ink: #17294c;
+      --line: #c8d8fb;
+      font: 17px/1.55 system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #ecf2ff; color: var(--ink); }
+    main { max-width: 860px; margin: auto; padding: 16px; }
+    header, .panel {
+      border-radius: 20px;
+      padding: clamp(16px, 4vw, 30px);
+      margin-bottom: 18px;
+    }
+    header {
+      display: flex; align-items: center; gap: 20px;
+      background: #fff4c7; color: var(--blue);
+    }
+    header img { width: clamp(57px, 12vw, 96px); height: auto; }
+    header h1 { margin: 0; font-size: clamp(1.35rem, 4vw, 2.15rem); }
+    header p { margin: 2px 0 0; }
+    .panel { background: white; }
+    h2, h3 { color: var(--blue); margin-top: 0; }
+    p { margin: 0 0 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .test {
+      display: block; padding: 12px; margin: 8px 0; color: var(--blue);
+      border-radius: 10px; text-decoration: none; font-weight: 650;
+    }
+    .a1 { background: #ecffe9; }
+    .a2 { background: #dbfff5; }
+    .b1 { background: #eeeaff; }
+    button, input { font: inherit; }
+    input[type=text] {
+      width: 100%; padding: 10px; border: 1px solid var(--line);
+      color: var(--ink); border-radius: 8px; min-height: 46px;
+    }
+    button {
+      cursor: pointer; border: 0; border-radius: 10px;
+      min-height: 46px; padding: 10px 16px; font-weight: 700;
+      background: var(--blue); color: white;
+    }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 3px solid #ffab02; outline-offset: 3px;
+    }
+    .toolbar {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .read {
+      white-space: pre-line; padding: 16px; background: #fff4c7;
+      border-radius: 12px;
+    }
+    fieldset {
+      border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; margin: 0 0 15px; min-width: 0;
+    }
+    legend { padding: 0 6px; font-weight: 700; }
+    .choice {
+      display: flex; gap: 10px; align-items: center; min-height: 46px;
+      cursor: pointer; padding: 6px 9px; margin: 4px 0;
+      border-radius: 8px; background: #f1f5ff;
+    }
+    .choice:has(input:checked) { background: #dbfff5; }
+    .choice input { accent-color: var(--blue); width: 18px; height: 18px; flex-shrink: 0; }
+    .score { font-size: 2.5rem; color: var(--blue); font-weight: 800; }
+    .result { background: #ecffe9; }
+    .notice { color: #8a4500; }
+    @media (max-width: 560px) {
+      .grid { grid-template-columns: 1fr; }
+      header { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <img id="logo" src="logo.png" alt="Logo El Yasmine Online">
+    <div>
+      <h1>El Yasmine Online</h1>
+      <p>Évaluations de français et d’anglais</p>
+    </div>
+  </header>
+  <div id="app"></div>
+</main>
+<script>
+"use strict";
+
+/*
+  Chaque test contient un titre, un texte et cinq questions de compréhension.
+  Pour chaque question, la bonne réponse apparaît en premier dans la banque.
+  L’application mélange les trois choix avant de les afficher.
+*/
+const tests = {
+  fr: [
+    ["Se présenter", "Bonjour ! Je m’appelle Lina. J’ai neuf ans. J’habite à Oran avec ma famille. À l’école, j’aime dessiner. Mon anniversaire est en mai.",
+      [
+        ["Comment s’appelle la fille ?", "Lina", "Nora", "Maya"],
+        ["Quel âge a-t-elle ?", "Neuf ans", "Huit ans", "Dix ans"],
+        ["Où habite-t-elle ?", "À Oran", "À Alger", "À Paris"],
+        ["Qu’aime-t-elle faire à l’école ?", "Dessiner", "Chanter", "Courir"],
+        ["Quand est son anniversaire ?", "En mai", "En mars", "En juin"]
+      ]],
+    ["La famille et les animaux", "Sami a une sœur qui s’appelle Nora. Son frère Adam est plus petit. Ils vivent avec leurs parents. Leur chat, Moka, dort sur une chaise. Le samedi, toute la famille va au parc.",
+      [
+        ["Qui est Nora ?", "La sœur de Sami", "La mère de Sami", "L’amie de Sami"],
+        ["Comment s’appelle le frère ?", "Adam", "Moka", "Sami"],
+        ["Quel animal ont-ils ?", "Un chat", "Un chien", "Un lapin"],
+        ["Où dort Moka ?", "Sur une chaise", "Sous la table", "Dans le jardin"],
+        ["Quand vont-ils au parc ?", "Le samedi", "Le dimanche", "Le lundi"]
+      ]],
+    ["Les goûts et les loisirs", "Après l’école, Inès fait du vélo. Elle aime aussi lire des bandes dessinées. Son amie Aya préfère jouer au basket. Le mercredi, elles jouent ensemble au parc. Quand il pleut, elles dessinent chez Inès.",
+      [
+        ["Que fait Inès après l’école ?", "Elle fait du vélo", "Elle nage", "Elle joue au piano"],
+        ["Que lit Inès ?", "Des bandes dessinées", "Des journaux", "Des recettes"],
+        ["Quel sport Aya préfère-t-elle ?", "Le basket", "Le tennis", "Le football"],
+        ["Quand jouent-elles ensemble au parc ?", "Le mercredi", "Le vendredi", "Le dimanche"],
+        ["Que font-elles quand il pleut ?", "Elles dessinent", "Elles font du vélo", "Elles vont au stade"]
+      ]],
+    ["Les consignes de classe", "Aujourd’hui, nous préparons une affiche. Prenez une feuille blanche et un crayon bleu. Écrivez votre prénom en haut de la feuille. Dessinez une maison au milieu. À la fin, posez l’affiche sur la table près de la porte.",
+      [
+        ["Que prépare la classe ?", "Une affiche", "Un gâteau", "Une chanson"],
+        ["De quelle couleur est la feuille ?", "Blanche", "Bleue", "Verte"],
+        ["Quel crayon faut-il prendre ?", "Le bleu", "Le noir", "Le rouge"],
+        ["Où faut-il écrire son prénom ?", "En haut de la feuille", "Au milieu", "En bas de la feuille"],
+        ["Où faut-il poser l’affiche ?", "Sur la table près de la porte", "Sous une chaise", "Dans le sac"]
+      ]],
+    ["Une journée bien remplie", "Le mardi, Yacine se lève à sept heures. Il prend le bus à huit heures moins le quart. Après les cours, il rentre à pied avec son cousin car le bus est très plein. Avant de dîner, il prépare son sac pour le lendemain.",
+      [
+        ["À quelle heure se lève Yacine ?", "À 7 h", "À 8 h", "À 7 h 45"],
+        ["Quel transport prend-il le matin ?", "Le bus", "Le tramway", "Le métro"],
+        ["Pourquoi rentre-t-il à pied ?", "Le bus est très plein", "Il a perdu son sac", "Il n’a plus cours"],
+        ["Avec qui rentre-t-il ?", "Son cousin", "Son frère", "Sa sœur"],
+        ["Que fait-il avant de dîner ?", "Il prépare son sac", "Il prend le bus", "Il regarde un film"]
+      ]],
+    ["S’orienter en ville", "Pour aller à la bibliothèque depuis la place, traverse la rue devant la pharmacie. Continue tout droit jusqu’à la boulangerie, puis tourne à droite. La bibliothèque est en face du petit parc. Si tu arrives à la piscine, tu es allé trop loin.",
+      [
+        ["D’où part-on ?", "De la place", "Du parc", "De la piscine"],
+        ["Devant quel commerce traverse-t-on ?", "La pharmacie", "La boulangerie", "La librairie"],
+        ["Où tourne-t-on à droite ?", "À la boulangerie", "Au parc", "À la piscine"],
+        ["Qu’y a-t-il en face de la bibliothèque ?", "Un petit parc", "Une école", "Une pharmacie"],
+        ["Quel lieu indique qu’on est allé trop loin ?", "La piscine", "La place", "La boulangerie"]
+      ]],
+    ["Une sortie au musée", "Samedi dernier, la classe d’Amel a visité un musée. Le groupe est arrivé plus tard que prévu parce qu’un bus est tombé en panne. Les élèves ont commencé par les sculptures. Amel voulait acheter une carte postale, mais la boutique était fermée. Elle a pris une photo de son œuvre préférée.",
+      [
+        ["Quand a eu lieu la visite ?", "Samedi dernier", "Dimanche dernier", "Samedi prochain"],
+        ["Pourquoi le groupe était-il en retard ?", "Un bus est tombé en panne", "Le musée était fermé", "Amel a perdu son ticket"],
+        ["Qu’ont vu les élèves en premier ?", "Les sculptures", "Les cartes postales", "Les tableaux"],
+        ["Pourquoi Amel n’a-t-elle rien acheté ?", "La boutique était fermée", "Elle n’avait pas envie d’acheter", "Elle avait oublié son argent"],
+        ["Qu’a-t-elle fait à la place ?", "Elle a pris une photo", "Elle a dessiné le musée", "Elle a acheté un livre"]
+      ]],
+    ["Une invitation à un atelier", "Salut Mehdi ! Notre atelier de cuisine aura lieu vendredi à 16 h dans la salle du club. Apporte un tablier si tu en as un. Nous fournissons tous les ingrédients. Si tu veux inviter une amie ou un ami, écris-moi avant jeudi soir pour que je prépare assez de matériel. À bientôt, Zoé.",
+      [
+        ["Quel atelier est proposé ?", "Un atelier de cuisine", "Un atelier de peinture", "Un atelier de musique"],
+        ["À quelle heure commence-t-il ?", "À 16 h", "À 14 h", "À 18 h"],
+        ["Qu’est-ce que le participant peut apporter ?", "Un tablier", "Tous les ingrédients", "Une chaise"],
+        ["Quand faut-il écrire pour inviter quelqu’un ?", "Avant jeudi soir", "Vendredi soir", "Après l’atelier"],
+        ["Pourquoi Zoé veut-elle être prévenue ?", "Pour préparer assez de matériel", "Pour déplacer l’atelier", "Pour changer les ingrédients"]
+      ]],
+    ["Le jardin de l’école", "Au début de l’année, les élèves avaient planté des graines près d’un mur, à l’ombre. Après plusieurs semaines, presque rien n’avait poussé. Au lieu d’abandonner, ils ont demandé conseil au jardinier, qui leur a proposé un coin plus ensoleillé. Cette fois, les plantes ont grandi. Les élèves ont noté leurs observations afin que la classe suivante puisse poursuivre le projet.",
+      [
+        ["Quel problème les élèves ont-ils rencontré au début ?", "Peu de graines ont poussé", "Le jardinier a refusé de les aider", "Ils n’avaient aucune graine"],
+        ["Qu’est-ce qui a changé lors du deuxième essai ?", "L’exposition à la lumière", "Le bâtiment de l’école", "Le nombre d’élèves"],
+        ["Quelle formulation résume leur réaction ?", "Ils ont cherché une solution", "Ils ont arrêté le projet", "Ils ont caché leur échec"],
+        ["Pourquoi ont-ils noté leurs observations ?", "Pour transmettre leur expérience", "Pour décorer le mur", "Pour vendre les plantes"],
+        ["Quelle idée ressort du récit ?", "Un échec peut aider à améliorer un projet", "Il faut toujours planter à l’ombre", "Progresser exige de travailler seul"]
+      ]],
+    ["Choisir une activité", "Pour la sortie de fin d’année, Léa propose une randonnée. Elle rappelle que tout le monde peut participer et que l’entrée est gratuite. Nabil préfère un atelier scientifique, dont les activités sont plus variées, mais il faut payer le transport et l’atelier est réservé aux enfants de dix ans et plus. La classe choisit finalement la randonnée pour que le groupe reste entier.",
+      [
+        ["Quel avantage Léa met-elle en avant ?", "L’activité est accessible à tous", "Le transport est plus rapide", "Les activités diffèrent selon l’âge"],
+        ["Quel argument Nabil donne-t-il ?", "L’atelier propose des activités variées", "L’atelier est gratuit", "L’atelier est ouvert à tous les âges"],
+        ["Qu’est-ce qui limite l’accès à l’atelier ?", "Un âge minimum", "La météo", "Le niveau de lecture"],
+        ["Quel critère a finalement décidé la classe ?", "La participation de tout le groupe", "La variété des expériences", "L’avis de Nabil"],
+        ["Que signifie « dont les activités sont plus variées » ?", "L’atelier propose plusieurs types d’activités", "L’atelier dure plus longtemps", "L’atelier coûte moins cher"]
+      ]],
+    ["Des livres à échanger", "Mina voudrait aménager une boîte à livres dans la cour. Selon elle, cela permettrait de découvrir de nouvelles histoires sans acheter de livres. Adam craint cependant que les livres soient abîmés par la pluie. Mina lui propose d’installer la boîte sous le préau et de fixer une règle : chacun peut prendre un livre, à condition de le rapporter ou d’en déposer un autre.",
+      [
+        ["Quelle est la proposition de Mina ?", "Créer une boîte à livres", "Acheter des livres identiques", "Fermer le préau"],
+        ["Quel argument donne-t-elle ?", "Les élèves pourraient lire de nouveaux livres gratuitement", "La pluie abîmerait moins la cour", "La bibliothèque serait plus grande"],
+        ["Quelle inquiétude Adam exprime-t-il ?", "La pluie pourrait abîmer les livres", "Les livres seraient trop difficiles", "La boîte serait trop chère"],
+        ["Comment Mina répond-elle à cette inquiétude ?", "En proposant de placer la boîte à l’abri", "En supprimant la boîte", "En interdisant les échanges"],
+        ["Quelle règle propose-t-elle ?", "Rapporter le livre ou en déposer un autre", "Acheter un livre chaque mois", "Lire uniquement pendant la récréation"]
+      ]],
+    ["Partir moins vite, arriver ensemble", "Lors d’une sortie à vélo, un premier groupe a pris de l’avance. Au prochain carrefour, personne ne savait quelle route suivre, car la carte était dans le sac d’une élève restée à l’arrière. Une fois réunis, les enfants ont décidé de former des équipes et de s’attendre à chaque changement de direction. Ils sont arrivés un peu plus tard, mais chacun a pu profiter de la sortie.",
+      [
+        ["Pourquoi le premier groupe s’est-il arrêté ?", "Il ignorait quelle route prendre", "La sortie était terminée", "Il avait perdu un vélo"],
+        ["Où se trouvait la carte ?", "Dans le sac d’une élève à l’arrière", "Au premier carrefour", "Dans le sac du groupe de tête"],
+        ["Quelle règle les élèves ont-ils adoptée ?", "S’attendre aux changements de direction", "Rouler chacun de son côté", "Confier la carte au groupe le plus rapide"],
+        ["Quel compromis ont-ils accepté ?", "Arriver un peu plus tard pour rester ensemble", "Rentrer seuls pour aller plus vite", "Abandonner la sortie pour lire la carte"],
+        ["Quelle est l’idée principale ?", "Adapter son rythme peut aider tout le groupe", "La vitesse est le critère le plus important", "Une carte suffit à résoudre tous les problèmes"]
+      ]]
+  ],
+  en: [
+    ["Introducing yourself", "Hello! My name is Lily. I am eight years old. I live in a flat in London. My favourite colour is green. At school, I like music.",
+      [
+        ["What is her name?", "Lily", "Lucy", "Mia"],
+        ["How old is she?", "Eight", "Seven", "Nine"],
+        ["Where does she live?", "In London", "In Paris", "In Dublin"],
+        ["What is her favourite colour?", "Green", "Blue", "Yellow"],
+        ["What does she like at school?", "Music", "Art", "Maths"]
+      ]],
+    ["My family and pets", "Omar lives with his mum, dad and little sister Leila. They have a brown dog called Biscuit. Leila gives Biscuit water every morning. On Sundays, Omar and his dad take the dog to the park.",
+      [
+        ["Who is Leila?", "Omar’s sister", "Omar’s mum", "Omar’s teacher"],
+        ["What pet do they have?", "A dog", "A cat", "A bird"],
+        ["What colour is Biscuit?", "Brown", "Black", "White"],
+        ["What does Leila give Biscuit?", "Water", "Milk", "Bread"],
+        ["When do they go to the park?", "On Sundays", "On Mondays", "On Fridays"]
+      ]],
+    ["Things we like", "After school, Ben likes playing football, but Sara prefers swimming. Their friend Kim does not like sports. She loves making paper animals. On Friday, all three friends play a board game at Sara’s house.",
+      [
+        ["What does Ben like?", "Playing football", "Swimming", "Drawing"],
+        ["What does Sara prefer?", "Swimming", "Running", "Playing football"],
+        ["What does Kim make?", "Paper animals", "Wooden toys", "Fruit cakes"],
+        ["When do they play a board game?", "On Friday", "On Tuesday", "On Sunday"],
+        ["Where do they play together?", "At Sara’s house", "At school", "At the swimming pool"]
+      ]],
+    ["Classroom instructions", "Take your notebook and open it to page ten. Write today’s date at the top. Now draw three stars with a red pencil. Show your drawing to the person next to you. Then put your pencil on the desk.",
+      [
+        ["What should you open?", "Your notebook", "The window", "Your bag"],
+        ["Which page should you open?", "Page ten", "Page two", "Page twelve"],
+        ["Where do you write the date?", "At the top", "Under the desk", "At the bottom"],
+        ["How many stars do you draw?", "Three", "Five", "Two"],
+        ["Where do you put your pencil at the end?", "On the desk", "In your bag", "On the floor"]
+      ]],
+    ["A busy Wednesday", "Eva normally cycles to school, but this Wednesday she walks because her bicycle has a flat tyre. Lessons finish at half past three. She stops at the shop to buy a notebook before going home. In the evening she practises the piano, then reads a chapter of her book.",
+      [
+        ["How does Eva normally get to school?", "By bicycle", "By bus", "On foot"],
+        ["Why does she walk this Wednesday?", "Her bicycle has a flat tyre", "Her school has moved", "She misses the bus"],
+        ["When do her lessons finish?", "At half past three", "At three o’clock", "At half past four"],
+        ["What does she buy?", "A notebook", "A book", "A piano"],
+        ["What does she do after practising?", "She reads", "She goes to the shop", "She does her homework"]
+      ]],
+    ["Finding the sports centre", "Start at the train station. Walk past the supermarket and cross the bridge. Then turn left at the traffic lights. The sports centre is between the cinema and the post office. If you reach the school, you have gone too far.",
+      [
+        ["Where does the route start?", "At the train station", "At the cinema", "At the school"],
+        ["What do you cross?", "A bridge", "A park", "A railway platform"],
+        ["Where should you turn left?", "At the traffic lights", "At the supermarket", "At the station"],
+        ["What is next to the sports centre?", "The cinema", "The hospital", "The station"],
+        ["Which place means you went too far?", "The school", "The supermarket", "The bridge"]
+      ]],
+    ["The trip to the farm", "Last Saturday, Max visited a farm with his class. They planned to feed the goats first, but it was raining. Instead, they made bread inside. When the rain stopped, they went outside and watched a farmer collect eggs. Max brought some bread home to share with his brother.",
+      [
+        ["When did Max visit the farm?", "Last Saturday", "Last Sunday", "Next Saturday"],
+        ["What stopped the first planned activity?", "The rain", "A late bus", "A missing teacher"],
+        ["What did they do indoors?", "They made bread", "They fed the goats", "They collected eggs"],
+        ["What did they watch the farmer do?", "Collect eggs", "Bake a cake", "Feed the goats"],
+        ["Who did Max want to share the bread with?", "His brother", "His friend", "His teacher"]
+      ]],
+    ["An invitation to a film club", "Hi Alex! Film club starts at 5 p.m. on Thursday in Room 4. The film lasts just over an hour. You can bring a snack, but please bring a bottle of water because the drinks machine is broken. Tell me by Wednesday if you’re coming so I can save you a seat. Thanks, Mia.",
+      [
+        ["What is Alex invited to?", "Film club", "A birthday meal", "A football match"],
+        ["When does it start?", "Thursday at 5 p.m.", "Wednesday at 5 p.m.", "Thursday at 4 p.m."],
+        ["What does Mia ask Alex to bring?", "A bottle of water", "A film", "A chair"],
+        ["Why does Alex need water?", "The drinks machine is broken", "The room is very hot", "Snacks are forbidden"],
+        ["Why does Mia need a reply by Wednesday?", "To save Alex a seat", "To choose a different day", "To repair the machine"]
+      ]],
+    ["A better school garden", "During their first attempt, the pupils planted seeds beside a wall where there was little sunlight. Almost nothing grew. Instead of giving up, they asked the school gardener for advice and moved the pots to a brighter corner. The second group of plants grew well. The pupils wrote down what had changed so that next year’s class could build on their work.",
+      [
+        ["Why did the first plants struggle?", "They received little sunlight", "The pupils used no seeds", "The pots were too bright"],
+        ["How did the pupils respond?", "They asked for advice and tried again", "They ended the project", "They moved the pots into a darker place"],
+        ["What improved in the second location?", "The amount of light", "The number of pupils", "The size of the wall"],
+        ["Why did they record their observations?", "To help the next class continue", "To sell the plants", "To decorate the wall"],
+        ["What is the main lesson?", "A setback can help improve a project", "Gardening should always be done alone", "The first idea is always best"]
+      ]],
+    ["Choosing a class trip", "Amira suggests a riverside walk for the class trip because it is free and everyone can join. Ethan would rather visit a science centre, where there are more things to try. However, the centre charges for each ticket and one workshop is only for children aged ten or older. The class votes for the walk because they want every pupil to take part in the whole outing.",
+      [
+        ["What advantage does Amira mention?", "Everyone can join the walk", "The walk uses more equipment", "The science centre is free"],
+        ["Why does Ethan prefer the science centre?", "There are more activities to try", "It is closer to the river", "There are no age restrictions"],
+        ["What limits access to one workshop?", "A minimum age", "The weather", "A reading test"],
+        ["What matters most in the final decision?", "Including everyone", "Using the newest equipment", "Making the trip as long as possible"],
+        ["What does ‘would rather’ mean here?", "Would prefer to", "Would be unable to", "Would be required to"]
+      ]],
+    ["A book exchange", "Nina wants a book exchange in the school playground. In her opinion, it would help pupils discover stories without spending money. Daniel is worried that rain will damage the books. Nina suggests putting the shelves under a roof. She also proposes that anyone who takes a book should bring it back or leave another one in its place.",
+      [
+        ["What does Nina want to set up?", "A book exchange", "A bookshop", "A reading exam"],
+        ["What benefit does Nina mention?", "Pupils could discover stories for free", "The playground would get bigger", "The school could sell more books"],
+        ["What worries Daniel?", "The rain might damage the books", "The books might be too easy", "No one has read the books"],
+        ["How does Nina address his concern?", "She suggests protecting the shelves with a roof", "She suggests leaving them in the rain", "She cancels the idea"],
+        ["What rule does Nina propose?", "Return the book or leave another one", "Pay before borrowing a book", "Read every book at school"]
+      ]],
+    ["Arriving together", "On a cycling trip, the fastest pupils reached a junction before the others. They had to stop because the map was with a pupil at the back. After everyone caught up, the group agreed to wait at every turning. They arrived later than planned, but everyone stayed together and enjoyed the ride.",
+      [
+        ["Why did the fastest pupils stop?", "They did not have the map", "They had already arrived", "They needed a new bicycle"],
+        ["Who had the map?", "A pupil at the back", "The fastest pupil", "Someone at the destination"],
+        ["What did the group agree to do?", "Wait at every turning", "Cycle home separately", "Continue without the map"],
+        ["What did the group accept in order to stay together?", "Arriving later", "Ending the trip immediately", "Changing the destination"],
+        ["What is the main idea?", "Adjusting your pace can help the whole group", "The fastest riders should always go alone", "Every trip should finish exactly on time"]
+      ]]
+  ]
+};
+
+/*
+  Vingt questions de langue par niveau et par langue.
+  Chaque test en utilise cinq, avec un lot différent pour chaque test du niveau.
+*/
+const bank = {
+  fr: {
+    A1: [
+      ["Je ___ Léa.", "m’appelle", "s’appelle", "t’appelles"],
+      ["Tu ___ quel âge ?", "as", "a", "ai"],
+      ["Le contraire de « grand » est…", "petit", "rouge", "jeune"],
+      ["À 8 h du matin, on dit…", "Bonjour", "Bonne nuit", "Bonsoir"],
+      ["Après lundi, c’est…", "mardi", "jeudi", "dimanche"],
+      ["Le frère de ma mère est mon…", "oncle", "cousin", "neveu"],
+      ["Complète : « ___ sœur s’appelle Lina. »", "Ma", "Mon", "Mes"],
+      ["Quel animal miaule ?", "Le chat", "Le lapin", "Le cheval"],
+      ["Le féminin de « petit » est…", "petite", "petits", "petites"],
+      ["Complète : « Nous ___ deux chats. »", "avons", "avez", "ont"],
+      ["J’aime ___ des livres.", "lire", "lis", "lit"],
+      ["Quel objet utilise-t-on pour jouer au football ?", "Un ballon", "Un pinceau", "Un crayon"],
+      ["Complète : « Elle ___ le chocolat. »", "aime", "aimes", "aiment"],
+      ["Quel mot désigne un instrument de musique ?", "Piano", "Bicyclette", "Cahier"],
+      ["Quel loisir se pratique dans l’eau ?", "La natation", "Le dessin", "Le théâtre"],
+      ["Quelle consigne demande d’utiliser ses oreilles ?", "Écoute", "Écris", "Dessine"],
+      ["Avec quoi efface-t-on un trait de crayon ?", "Une gomme", "Un cahier", "Un sac"],
+      ["« Fermez la porte » signifie…", "La porte doit être fermée", "Il faut ouvrir la porte", "Il faut regarder la porte"],
+      ["Quelle position est le contraire de « en haut » ?", "En bas", "Dedans", "Devant"],
+      ["Quel mot complète « un crayon, deux ___ » ?", "crayons", "crayon", "crayonne"]
+    ],
+    A2: [
+      ["Demain, je ___ mon sac avant le cours.", "préparerai", "préparais", "ai préparé"],
+      ["Quelle activité se fait généralement le matin ?", "Prendre le petit-déjeuner", "Dîner", "Se coucher pour la nuit"],
+      ["« Il revient à la maison » veut dire…", "Il rentre", "Il part", "Il se lève"],
+      ["Quelle heure est « huit heures moins le quart » ?", "7 h 45", "8 h 15", "8 h 45"],
+      ["Pourquoi pars-tu tôt ? ___ mon bus arrive à 7 h.", "Parce que", "Mais", "Pendant"],
+      ["La boulangerie est de l’autre côté de la rue. Elle est…", "en face", "derrière", "au-dessus"],
+      ["Complète : « Tournez ___ gauche. »", "à", "en", "dans"],
+      ["Quel lieu permet d’emprunter des livres ?", "La bibliothèque", "La pharmacie", "La piscine"],
+      ["« Continue tout droit » veut dire…", "Avance sans tourner", "Tourne à droite", "Reviens en arrière"],
+      ["Quel mot désigne le point où deux rues se croisent ?", "Le carrefour", "Le plafond", "Le balcon"],
+      ["Hier, nous ___ un musée.", "avons visité", "visiterons", "allons visiter"],
+      ["Complète : « Elles ___ arrivées à midi. »", "sont", "ont", "avez"],
+      ["Le train est parti plus tard que prévu. Il était…", "en retard", "en avance", "à l’heure"],
+      ["« Avant la visite, on a déjeuné. » Qu’a-t-on fait en premier ?", "Déjeuner", "Visiter", "Quitter le musée"],
+      ["Quel mot renvoie généralement au passé ?", "Hier", "Demain", "Bientôt"],
+      ["Pour accepter une invitation, je peux dire…", "Oui, avec plaisir !", "Désolé, je ne peux pas.", "Tu veux venir ?"],
+      ["« Apporte ton tablier » est…", "une consigne", "un lieu", "une heure"],
+      ["Complète : « Préviens-moi ___ tu ne peux pas venir. »", "si", "et", "depuis"],
+      ["Quel mot indique une limite de temps ?", "Avant jeudi", "Chez Zoé", "En groupe"],
+      ["« Réserve une place » veut dire…", "Fais garder une place", "Cherche la sortie", "Achète un tablier"]
+    ],
+    B1: [
+      ["« Au lieu d’abandonner » introduit…", "une autre action possible", "une date précise", "une conséquence certaine"],
+      ["Complète : « Ils ont déménagé les pots ___ obtenir plus de lumière. »", "afin d’", "parce qu’", "bien qu’"],
+      ["« Les graines ont poussé grâce à la lumière. » Que marque « grâce à » ?", "Une cause positive", "Une opposition", "Une durée"],
+      ["Quelle phrase indique une action terminée ?", "Ils ont noté leurs résultats.", "Ils noteront leurs résultats.", "Ils vont noter leurs résultats."],
+      ["Quel verbe est proche de « poursuivre » un projet ?", "Continuer", "Annuler", "Oublier"],
+      ["« La sortie est gratuite. En revanche, le trajet coûte cher. » Que marque « en revanche » ?", "Une opposition", "Une cause", "Un ordre"],
+      ["Complète : « Je préfère marcher ___ le trajet est agréable. »", "car", "pourtant", "donc"],
+      ["Quelle phrase exprime une comparaison ?", "L’atelier est plus varié que la sortie.", "L’atelier commence à dix heures.", "L’atelier est réservé."],
+      ["Quel mot indique le résultat d’une cause ?", "Donc", "Pourtant", "Par exemple"],
+      ["Quelle phrase exprime une préférence ?", "Je choisirais plutôt la randonnée.", "La randonnée commence ici.", "La randonnée a duré une heure."],
+      ["Quelle expression introduit une opinion ?", "Selon moi", "À partir de lundi", "Tout à coup"],
+      ["Complète : « Tu peux emprunter un livre à condition de le ___. »", "rapporter", "rapportes", "rapporté"],
+      ["« Il craint que le livre soit abîmé. » Que ressent-il ?", "De l’inquiétude", "De la fierté", "Du soulagement"],
+      ["Quel mot introduit une réserve ?", "Cependant", "D’abord", "Puis"],
+      ["Quel argument justifie le choix d’un préau ?", "Les livres y sont à l’abri de la pluie.", "L’échange a lieu le vendredi.", "Le livre est intéressant."],
+      ["« Ils ont ralenti pour que chacun puisse suivre. » Quelle est leur intention ?", "Permettre à tous de suivre", "Arriver les premiers", "Changer de vélo"],
+      ["Quelle expression introduit le dernier événement d’un récit ?", "Finalement", "Au début", "La veille"],
+      ["« Ils sont arrivés malgré le vent. » Quelle relation reconnais-tu ?", "Une difficulté n’a pas empêché le résultat", "Le vent a provoqué leur arrivée", "Le vent est arrivé après eux"],
+      ["Quelle formulation donne une raison ?", "Ils se sont arrêtés parce qu’ils n’avaient pas la carte.", "Ils se sont arrêtés, puis sont repartis.", "Ils se sont arrêtés au carrefour."],
+      ["« S’attendre » dans un groupe veut dire…", "Attendre les autres membres", "Arriver chacun seul", "Oublier le rendez-vous"]
+    ]
+  },
+  en: {
+    A1: [
+      ["I ___ nine years old.", "am", "is", "are"],
+      ["What is ___ name?", "your", "you", "yours"],
+      ["Which greeting fits the morning?", "Good morning", "Good night", "See you tomorrow"],
+      ["One, two, three, ___", "four", "six", "ten"],
+      ["Which word is a colour?", "Yellow", "Window", "Pencil"],
+      ["My mum’s brother is my ___.", "uncle", "sister", "daughter"],
+      ["Which animal says ‘meow’?", "A cat", "A dog", "A duck"],
+      ["She ___ a brown dog.", "has", "have", "having"],
+      ["One dog, two ___.", "dogs", "dog", "dog’s"],
+      ["Which word means the opposite of ‘big’?", "Small", "Tall", "Long"],
+      ["I like ___ books.", "reading", "reads", "readed"],
+      ["Which activity takes place in water?", "Swimming", "Cycling", "Drawing"],
+      ["Tom ___ football on Fridays.", "plays", "play", "playing"],
+      ["Which object do you need to draw?", "A pencil", "A plate", "A shoe"],
+      ["Which sentence expresses a preference?", "I prefer tennis.", "Here is a ball.", "It is Tuesday."],
+      ["Which instruction asks you to use your ears?", "Listen", "Write", "Draw"],
+      ["Complete the instruction: ‘___ your book.’", "Open", "Opens", "Opening"],
+      ["The opposite of ‘under’ is…", "over", "inside", "behind"],
+      ["Which word means the top part of a page?", "Top", "Bottom", "Back"],
+      ["Which object can you write in?", "A notebook", "A coat", "A cup"]
+    ],
+    A2: [
+      ["I usually ___ to school at eight.", "go", "went", "going"],
+      ["‘Half past three’ is…", "3:30", "2:30", "3:15"],
+      ["She studies before dinner. What comes first?", "Studying", "Dinner", "Going to bed"],
+      ["Choose the reason: ‘I walked ___ my bike was broken.’", "because", "but", "after"],
+      ["Which word suggests something happens regularly?", "Usually", "Yesterday", "Once"],
+      ["‘Turn left’ is…", "an instruction about direction", "a time of day", "a type of transport"],
+      ["Complete: ‘The library is ___ the café and the shop.’", "between", "past", "across"],
+      ["‘Go straight ahead’ means…", "Continue without turning", "Turn right", "Go back"],
+      ["Where can you borrow a book?", "At the library", "At the station", "At the swimming pool"],
+      ["What helps cars know when to stop or go?", "Traffic lights", "A bookshelf", "A playground"],
+      ["Yesterday, we ___ a farm.", "visited", "visit", "will visit"],
+      ["Choose the past form of ‘go’.", "Went", "Goes", "Going"],
+      ["It rained, ___ we stayed inside.", "so", "but", "until"],
+      ["Which expression refers to the past?", "Last Saturday", "Next Saturday", "Tomorrow"],
+      ["‘I brought bread home.’ What did I take home?", "Bread", "Water", "Eggs"],
+      ["Which reply accepts an invitation?", "Yes, I’d love to.", "Sorry, I can’t come.", "Where is my bag?"],
+      ["‘Let me know by Wednesday’ means…", "Reply on or before Wednesday", "Reply from Thursday onwards", "Reply only after the event"],
+      ["What does ‘save you a seat’ mean?", "Keep a place for you", "Sell you a chair", "Ask you to stand"],
+      ["Complete: ‘Call me ___ you can’t come.’", "if", "at", "into"],
+      ["Which phrase expresses a suggestion?", "How about joining us?", "The room is closed.", "I went there yesterday."]
+    ],
+    B1: [
+      ["Which expression presents a different action?", "Instead of giving up", "At half past three", "On the third day"],
+      ["‘They took notes so that others could learn.’ Why did they take notes?", "To help others learn", "To stop others learning", "Because the lesson had ended"],
+      ["Which phrase shows an earlier event?", "Before the second attempt", "At the same time", "After the final result"],
+      ["What does ‘build on their work’ mean?", "Continue and improve what they started", "Stop and forget the project", "Replace the garden with a building"],
+      ["Choose the contrast: ‘It was difficult. ___, they kept trying.’", "However", "Therefore", "For example"],
+      ["‘The centre is more expensive than the walk’ expresses…", "a comparison", "a request", "a promise"],
+      ["Which word introduces a consequence?", "Therefore", "Although", "However"],
+      ["Choose the sentence that states a preference.", "I would rather visit the centre.", "The centre opens early.", "The walk starts here."],
+      ["Which word can replace ‘take part’?", "Participate", "Prepare", "Prevent"],
+      ["‘Although it is far away, I want to go.’ What does ‘although’ show?", "A contrast", "A time limit", "A direct result"],
+      ["Which phrase introduces a viewpoint?", "In my opinion", "On Tuesday morning", "At the bus stop"],
+      ["‘Anyone can join provided that they register.’ What is required?", "They must register", "They must buy a book", "They must bring a friend"],
+      ["‘He is concerned about the rain’ means…", "He is worried about it", "He is excited about it", "He has forgotten about it"],
+      ["What does ‘in its place’ mean in the book exchange rule?", "As a replacement", "In a different school", "At a later time"],
+      ["Which sentence provides a reason for using a roof?", "It protects the books from rain.", "The shelves look nice.", "The box is beside a wall."],
+      ["‘They arrived later than planned’ means…", "They arrived after the time they expected", "They arrived before the others", "They did not arrive at all"],
+      ["Which phrase signals the final event of a story?", "In the end", "At first", "The day before"],
+      ["‘They finished despite the rain.’ What does ‘despite’ show?", "The rain did not prevent them from finishing", "The rain caused them to finish", "It only rained after they finished"],
+      ["What does ‘caught up’ mean in the cycling story?", "Reached the others", "Started before the others", "Turned back immediately"],
+      ["Which sentence gives the purpose of waiting?", "They waited so nobody would be left behind.", "They waited beside a tree.", "They waited for ten minutes."]
+    ]
+  }
+};
+
+const app = document.getElementById("app");
+document.getElementById("logo").addEventListener("error", event => {
+  event.currentTarget.hidden = true;
+});
+const languages = { fr: "Français", en: "Anglais" };
+const levels = ["A1", "A2", "B1"];
+const params = new URLSearchParams(location.search);
+const language = params.get("langue");
+const number = Number(params.get("test"));
+const validTest = Object.hasOwn(tests, language)
+  && Number.isInteger(number) && number >= 1 && number <= 12;
+
+function node(tag, text, className) {
+  const element = document.createElement(tag);
+  if (text !== undefined) element.textContent = text;
+  if (className) element.className = className;
+  return element;
+}
+
+function testLink(lang, index) {
+  const url = new URL(location.href);
+  url.search = new URLSearchParams({ langue: lang, test: String(index) }).toString();
+  url.hash = "";
+  return url.href;
+}
+
+function homeLink() {
+  const url = new URL(location.href);
+  url.search = "";
+  url.hash = "";
+  return url.href;
+}
+
+function shuffle(items) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function showCatalogue() {
+  const panel = node("section", undefined, "panel");
+  panel.append(node("h2", "Choisir un test"));
+  if (params.has("test") || params.has("langue")) {
+    panel.append(node("p", "Ce lien de test est incomplet ou invalide.", "notice"));
+  }
+  const grid = node("div", undefined, "grid");
+  for (const [lang, name] of Object.entries(languages)) {
+    const col = node("section");
+    col.append(node("h3", name));
+    tests[lang].forEach(([title], i) => {
+      const level = levels[Math.floor(i / 4)];
+      const link = node("a", `${level} · Test ${i + 1} · ${title}`, `test ${level.toLowerCase()}`);
+      link.href = testLink(lang, i + 1);
+      col.append(link);
+    });
+    grid.append(col);
+  }
+  panel.append(grid);
+  app.replaceChildren(panel);
+}
+
+function showStart() {
+  const [title] = tests[language][number - 1];
+  const level = levels[Math.floor((number - 1) / 4)];
+  document.title = `${languages[language]} · Test ${number} ${level} · El Yasmine Online`;
+  const panel = node("section", undefined, "panel");
+  const form = node("form");
+  const labels = node("div", undefined, "grid");
+
+  for (const [name, labelText, autocomplete] of [
+    ["prenom", "Prénom", "given-name"],
+    ["nom", "Nom", "family-name"]
+  ]) {
+    const label = node("label", labelText);
+    const input = node("input");
+    input.type = "text";
+    input.name = name;
+    input.required = true;
+    input.maxLength = 60;
+    input.autocomplete = autocomplete;
+    input.addEventListener("input", () => input.setCustomValidity(""));
+    label.append(input);
+    labels.append(label);
+  }
+
+  const bar = node("div", undefined, "toolbar");
+  const start = node("button", "Commencer le test");
+  start.type = "submit";
+  const share = node("button", "Copier le lien de ce test");
+  share.type = "button";
+  const status = node("span");
+  status.setAttribute("role", "status");
+  share.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(testLink(language, number));
+      status.textContent = "Lien copié.";
+    } catch {
+      status.textContent = "Tu peux copier l’adresse dans la barre du navigateur.";
+    }
+  });
+
+  bar.append(start, share, status);
+  form.append(labels, bar);
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    const firstName = form.elements.prenom.value.trim();
+    const lastName = form.elements.nom.value.trim();
+    if (!firstName || !lastName) {
+      const empty = !firstName ? form.elements.prenom : form.elements.nom;
+      empty.setCustomValidity("Renseigne ce champ pour commencer.");
+      empty.reportValidity();
+      return;
+    }
+    showQuestions(firstName, lastName);
+  });
+
+  panel.append(
+    node("h2", `${languages[language]} · Test ${number} · ${level}`),
+    node("h3", title),
+    node("p", "10 questions · Environ 20 minutes · Note sur 20"),
+    form
+  );
+  app.replaceChildren(panel);
+}
+
+function showQuestions(firstName, lastName) {
+  const index = number - 1;
+  const level = levels[Math.floor(index / 4)];
+  const [title, passage, reading] = tests[language][index];
+  const start = (index % 4) * 5;
+  const languageQuestions = bank[language][level].slice(start, start + 5);
+  const questions = [...reading, ...languageQuestions];
+  const isEnglish = language === "en";
+  const panel = node("section", undefined, "panel");
+  const heading = node("h2", title);
+  heading.lang = language;
+  heading.tabIndex = -1;
+  const form = node("form");
+  const instructions = node("p");
+  instructions.setAttribute("role", "status");
+
+  const readingPart = node("section");
+  const languagePart = node("section");
+  readingPart.lang = language;
+  languagePart.lang = language;
+  readingPart.append(
+    node("h3", isEnglish ? "Read the text" : "Lis le texte"),
+    node("p", passage, "read")
+  );
+  languagePart.append(node("h3", isEnglish ? "Language questions" : "Questions de langue"));
+
+  questions.forEach(([prompt, answer, distractor1, distractor2], i) => {
+    const group = node("fieldset");
+    group.append(node("legend", `${i + 1}. ${prompt}`));
+    const options = shuffle([answer, distractor1, distractor2]);
+    options.forEach(option => {
+      const label = node("label", undefined, "choice");
+      const input = node("input");
+      input.type = "radio";
+      input.name = `q${i}`;
+      input.value = option;
+      input.required = true;
+      label.append(input, document.createTextNode(option));
+      group.append(label);
+    });
+    (i < reading.length ? readingPart : languagePart).append(group);
+  });
+
+  const submit = node("button", "Terminer et voir ma note");
+  submit.type = "submit";
+  form.append(readingPart, languagePart, submit);
+  let submitted = false;
+
+  function finish() {
+    if (submitted) return;
+    submitted = true;
+    clearInterval(timer);
+    const answers = new FormData(form);
+    const correct = questions.reduce(
+      (total, question, i) => total + Number(answers.get(`q${i}`) === question[1]),
+      0
+    );
+    showResult(firstName, lastName, title, correct);
+  }
+
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    finish();
+  });
+
+  const deadline = Date.now() + 20 * 60 * 1000;
+  const clock = node("p", "Temps restant · 20:00");
+  function updateClock() {
+    const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    const minutes = Math.floor(seconds / 60);
+    clock.textContent = `Temps restant · ${String(minutes).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+
+    if (seconds === 60) instructions.textContent = "Il reste une minute.";
+    if (seconds === 0) finish();
+  }
+  const timer = setInterval(updateClock, 250);
+  panel.append(
+    heading,
+    clock,
+    instructions,
+    node("p", "Choisis une réponse par question. À la fin du temps, les réponses déjà cochées sont corrigées."),
+    form
+  );
+  app.replaceChildren(panel);
+  heading.focus();
+  window.scrollTo(0, 0);
+}
+
+function showResult(firstName, lastName, title, correct) {
+  const panel = node("section", undefined, "panel result");
+  const heading = node("h2", "Ton résultat");
+  heading.tabIndex = -1;
+  const titleLine = node("p", `${languages[language]} · Test ${number} · ${title}`);
+  const text = node("p", `Bravo, ${firstName} ${lastName}, tu as terminé le test !`);
+  const score = node("p", `${correct * 2} / 20`, "score");
+  const details = node("p", `${correct} bonne${correct === 1 ? "" : "s"} réponse${correct === 1 ? "" : "s"} sur 10.`);
+  panel.append(heading, titleLine, text, score, details);
+  app.replaceChildren(panel);
+  heading.focus();
+  window.scrollTo(0, 0);
+}
+
+if (validTest) showStart();
+else showCatalogue();
+</script>
+</body>
+</html>
