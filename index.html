@@ -486,30 +486,44 @@ function shuffle(items) {
 
 function showCatalogue() {
   const panel = node("section", undefined, "panel");
-  panel.append(node("h2", "Choisir un test"));
-  if (params.has("test") || params.has("langue")) {
-    panel.append(node("p", "Ce lien de test est incomplet ou invalide.", "notice"));
-  }
-  const grid = node("div", undefined, "grid");
-  for (const [lang, name] of Object.entries(languages)) {
-    const col = node("section");
-    col.append(node("h3", name));
-    tests[lang].forEach(([title], i) => {
-      const level = levels[Math.floor(i / 4)];
-      const link = node("a", `${level} · Test ${i + 1} · ${title}`, `test ${level.toLowerCase()}`);
-      link.href = testLink(lang, i + 1);
-      col.append(link);
+
+  if (Object.hasOwn(languages, language)) {
+    panel.append(node("h2", `Tests de ${languages[language].toLowerCase()}`));
+
+    const back = node("a", "Changer de langue");
+    back.href = homeLink();
+    panel.append(back);
+
+    if (params.has("test")) {
+      panel.append(node("p", "Ce lien de test est invalide.", "notice"));
+    }
+
+    tests[language].forEach(([title], index) => {
+      const link = node("a", `Test ${index + 1} · ${title}`, "test a2");
+      link.href = testLink(language, index + 1);
+      panel.append(link);
     });
-    grid.append(col);
+  } else {
+    panel.append(node("h2", "Choisis ta langue"));
+
+    const grid = node("div", undefined, "grid");
+    for (const [code, label] of Object.entries(languages)) {
+      const url = new URL(homeLink());
+      url.searchParams.set("langue", code);
+      const link = node("a", label, "test a2");
+      link.href = url.href;
+      grid.append(link);
+    }
+
+    panel.append(grid);
   }
-  panel.append(grid);
+
   app.replaceChildren(panel);
 }
-
+  
 function showStart() {
   const [title] = tests[language][number - 1];
-  const level = levels[Math.floor((number - 1) / 4)];
-  document.title = `${languages[language]} · Test ${number} ${level} · El Yasmine Online`;
+  document.title = `Test ${number} · ${title} · El Yasmine Online`;
   const panel = node("section", undefined, "panel");
   const form = node("form");
   const labels = node("div", undefined, "grid");
@@ -562,7 +576,7 @@ function showStart() {
   });
 
   panel.append(
-    node("h2", `${languages[language]} · Test ${number} · ${level}`),
+    node("h2", `${languages[language]} · Test ${number}`),
     node("h3", title),
     node("p", "10 questions · Environ 20 minutes · Note sur 20"),
     form
